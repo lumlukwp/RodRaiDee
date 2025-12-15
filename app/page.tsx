@@ -18,7 +18,8 @@ const PRESETS: Record<
     insurance: number
     maintenance: number
     registration: number
-    internet: number
+    resalePct: number
+    miscellaneous: number
     fuelPerKm: number
     maintenanceAtEnd: number
   }
@@ -26,16 +27,18 @@ const PRESETS: Record<
   ICE: {
     insurance: 22000,
     maintenance: 8000,
-    registration: 2000,
-    internet: 0,
+    registration: 2500,
+    resalePct: 30,
+    miscellaneous: 0,
     fuelPerKm: 2.2,
     maintenanceAtEnd: 0,
   },
   Hybrid: {
     insurance: 22000,
     maintenance: 8000,
-    registration: 2000,
-    internet: 0,
+    registration: 2500,
+    resalePct: 30,
+    miscellaneous: 0,
     fuelPerKm: 1.6,
     maintenanceAtEnd: 150000,
   },
@@ -43,7 +46,8 @@ const PRESETS: Record<
     insurance: 35000,
     maintenance: 4000,
     registration: 500,
-    internet: 0,
+    resalePct: 10,
+    miscellaneous: 0,
     fuelPerKm: 0.8,
     maintenanceAtEnd: 300000,
   },
@@ -63,7 +67,7 @@ type CarInput = {
   maintenance: number
   maintenanceAtEnd: number
   registration: number
-  internet: number
+  miscellaneous: number
   fuelPerKm: number
 }
 
@@ -73,17 +77,17 @@ const defaultCar = (index: number): CarInput => {
   return {
     name: `Car ${index + 1}`,
     powertrain: 'ICE',
-    carPrice: 800000,
+    carPrice: 1000000,
     discount: 0,
     otherDiscount: 0,
-    resalePct: 10,
-    kmPerYear: 38400,
+    resalePct: p.resalePct,
+    kmPerYear: 20000,
     years: 10,
     insurance: p.insurance,
     maintenance: p.maintenance,
     maintenanceAtEnd: p.maintenanceAtEnd,
     registration: p.registration,
-    internet: p.internet,
+    miscellaneous: p.miscellaneous,
     fuelPerKm: p.fuelPerKm,
   }
 }
@@ -110,6 +114,10 @@ export default function Home() {
 
   const addCar = () => setCars([...cars, defaultCar(cars.length)])
 
+  const removeCar = (index: number) => {
+    setCars(cars.filter((_, i) => i !== index))
+  }
+
   /* ===== calculation ===== */
   const calculate = (car: CarInput) => {
     const netCarPrice =
@@ -121,17 +129,13 @@ export default function Home() {
       car.insurance +
       car.maintenance +
       car.registration +
-      car.internet +
+      car.miscellaneous +
       fuelPerYear
 
-    const resaleValue =
-      car.carPrice * (car.resalePct / 100)
+    const resaleValue = car.carPrice * (car.resalePct / 100)
 
     const totalCost =
-      netCarPrice +
-      yearlyCost * car.years +
-      car.maintenanceAtEnd -
-      resaleValue
+      netCarPrice + yearlyCost * car.years + car.maintenanceAtEnd - resaleValue
 
     return {
       netCarPrice,
@@ -162,11 +166,22 @@ export default function Home() {
 
           return (
             <div key={i} className="border rounded p-4 shadow space-y-2">
-              <input
-                className="text-xl font-semibold w-full"
-                value={car.name}
-                onChange={e => updateCar(i, 'name', e.target.value)}
-              />
+              {/* name + remove */}
+              <div className="flex justify-between items-center">
+                <input
+                  className="text-xl font-semibold w-full"
+                  value={car.name}
+                  onChange={e => updateCar(i, 'name', e.target.value)}
+                />
+                {cars.length > 1 && (
+                  <button
+                    className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+                    onClick={() => removeCar(i)}
+                  >
+                    🗑️ Remove
+                  </button>
+                )}
+              </div>
 
               {/* ===== preset ===== */}
               <label>ประเภทระบบขับเคลื่อน</label>
@@ -181,7 +196,8 @@ export default function Home() {
                       insurance: p.insurance,
                       maintenance: p.maintenance,
                       registration: p.registration,
-                      internet: p.internet,
+                      resalePct: p.resalePct,
+                      miscellaneous: p.miscellaneous,
                       fuelPerKm: p.fuelPerKm,
                       maintenanceAtEnd: p.maintenanceAtEnd,
                     })
@@ -200,7 +216,7 @@ export default function Home() {
                       insurance: p.insurance,
                       maintenance: p.maintenance,
                       registration: p.registration,
-                      internet: p.internet,
+                      miscellaneous: p.miscellaneous,
                       fuelPerKm: p.fuelPerKm,
                       maintenanceAtEnd: p.maintenanceAtEnd,
                     })
@@ -247,7 +263,7 @@ export default function Home() {
                 onChange={e => updateCar(i, 'kmPerYear', +e.target.value)}
               />
 
-              <label>จำนวนปี</label>
+              <label>จำนวนปีที่จะใช้รถ</label>
               <input
                 type="number"
                 value={car.years}
@@ -270,18 +286,18 @@ export default function Home() {
                 onChange={e => updateCar(i, 'maintenance', +e.target.value)}
               />
 
-              <label>ต่อทะเบียน</label>
+              <label>ต่อทะเบียน (ภาษีและพรบ.)</label>
               <input
                 type="number"
                 value={car.registration}
                 onChange={e => updateCar(i, 'registration', +e.target.value)}
               />
 
-              <label>ค่าอินเตอร์เน็ตต่อปี</label>
+              <label>ค่าใช้จ่ายอื่น ๆ ต่อปี</label>
               <input
                 type="number"
-                value={car.internet}
-                onChange={e => updateCar(i, 'internet', +e.target.value)}
+                value={car.miscellaneous}
+                onChange={e => updateCar(i, 'miscellaneous', +e.target.value)}
               />
 
               <label>ค่าเชื้อเพลิง (บาท/กม.)</label>
